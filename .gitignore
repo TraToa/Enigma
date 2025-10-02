@@ -1,0 +1,6 @@
+# ignore .class files in bin folder
+\bin
+*.class
+
+# ignore .vscode folder
+\.vscode
