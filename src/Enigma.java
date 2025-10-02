@@ -1,5 +1,5 @@
 import java.util.HashMap;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 class Enigma {
@@ -9,8 +9,8 @@ class Enigma {
     }
 
     private int rotorNumber;
-    private ArrayList<String> rotors = new ArrayList<>();
-    private ArrayList<HashMap<Character, Character>> encryptionTables = new ArrayList<>();
+    private LinkedList<String> rotors = new LinkedList<>();
+    private LinkedList<HashMap<Character, Character>> encryptionTables = new LinkedList<>();
     private HashMap<String, String> rotorWiringTable;
     private HashMap<String, String> reflectorWiringTable;
     private Scanner scn = new Scanner(System.in);
@@ -43,14 +43,14 @@ class Enigma {
         for (int i = 0; i < this.rotorNumber; i++) {
             String rotorInput = scn.nextLine();
             this.rotors.add(rotorInput);
-            this.encryptionTables.add(this.encryptionTable(this.getRotorWiring(rotorInput)));
+            this.encryptionTables.addLast(this.encryptionTable(this.getRotorWiring(rotorInput)));
         }
     }
 
     void setReflector() {
         String reflectorInput = scn.nextLine();
         String wiring = this.getReflectorWiring(reflectorInput);
-        this.encryptionTables.add(this.encryptionTable(wiring));
+        this.encryptionTables.addFirst(this.encryptionTable(wiring));
     }
 
     private HashMap<Character, Character> encryptionTable(String rotorWiring) {
@@ -67,7 +67,7 @@ class Enigma {
         return this.rotors.get(i);
     }
     
-    ArrayList<String> getRotors() {
+    LinkedList<String> getRotors() {
         return this.rotors;
     }
 
