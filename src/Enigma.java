@@ -12,6 +12,7 @@ class Enigma {
 
     private int rotorNumber;
     private ArrayList<String> rotors = new ArrayList<>();
+    private ArrayList<Integer> ringSettings = new ArrayList<>();
     private LinkedList<HashMap<Character, Character>> encryptionTables = new LinkedList<>();
     private HashMap<Character, Character> plugboard = new HashMap<>();
     private HashMap<String, String> rotorWiringTable;
@@ -49,10 +50,11 @@ class Enigma {
         }
     }
 
-    void setReflector(Scanner scn) {
-        String reflectorInput = scn.next().toUpperCase();
-        String wiring = this.getReflectorWiring(reflectorInput);
-        this.encryptionTables.addFirst(this.encryptionTable(wiring));
+    void setRingSettings(Scanner scn) {
+        for (int i = 0; i < this.rotorNumber; i++) {
+            int ringInput = scn.nextInt();
+            this.ringSettings.add(ringInput);
+        }
     }
 
     void setPlugboard(Scanner scn) {
@@ -73,13 +75,26 @@ class Enigma {
             while (scn.hasNext()) {
                 String pair = scn.next().toUpperCase();
                 this.plugboard.put(pair.charAt(0), pair.charAt(1));
+                this.plugboard.put(pair.charAt(1), pair.charAt(0));
             }
             for (char character = 65; character <= 90; character++) {
-                this.plugboard.put(character, character);
+                if (!this.plugboard.containsKey(character)) {
+                    this.plugboard.put(character, character);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    void setReflector(Scanner scn) {
+        String reflectorInput = scn.next().toUpperCase();
+        String wiring = this.getReflectorWiring(reflectorInput);
+        this.encryptionTables.addFirst(this.encryptionTable(wiring));
+    }
+
+    ArrayList<Integer> getRingSettings() {
+        return this.ringSettings;
     }
 
     HashMap<Character, Character> getPlugboard() {
