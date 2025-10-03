@@ -1,4 +1,6 @@
 import java.util.HashMap;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
 
@@ -9,11 +11,11 @@ class Enigma {
     }
 
     private int rotorNumber;
-    private LinkedList<String> rotors = new LinkedList<>();
+    private ArrayList<String> rotors = new ArrayList<>();
     private LinkedList<HashMap<Character, Character>> encryptionTables = new LinkedList<>();
+    private HashMap<Character, Character> plugboard = new HashMap<>();
     private HashMap<String, String> rotorWiringTable;
     private HashMap<String, String> reflectorWiringTable;
-    private Scanner scn = new Scanner(System.in);
 
     static Enigma returnModel(Model model) {
         switch (model) {
@@ -39,18 +41,49 @@ class Enigma {
         return this.rotorNumber;
     }
 
-    void setRotors() {
+    void setRotors(Scanner scn) {
         for (int i = 0; i < this.rotorNumber; i++) {
-            String rotorInput = scn.nextLine();
+            String rotorInput = scn.next().toUpperCase();
             this.rotors.add(rotorInput);
             this.encryptionTables.addLast(this.encryptionTable(this.getRotorWiring(rotorInput)));
         }
     }
 
-    void setReflector() {
-        String reflectorInput = scn.nextLine();
+    void setReflector(Scanner scn) {
+        String reflectorInput = scn.next().toUpperCase();
         String wiring = this.getReflectorWiring(reflectorInput);
         this.encryptionTables.addFirst(this.encryptionTable(wiring));
+    }
+
+    void setPlugboard(Scanner scn) {
+        for (char input = 65; input <= 90; input++) {
+            if (!this.plugboard.containsKey(input)) {
+                System.out.print(input);
+                char output = scn.next().toUpperCase().charAt(0);
+                this.plugboard.put(input, output);
+                if (input != output) {
+                    this.plugboard.put(output, input);
+                }
+            }
+        }
+    }
+
+    void setPlugboard(File file) {
+        try (Scanner scn = new Scanner(file)) {
+            while (scn.hasNext()) {
+                String pair = scn.next().toUpperCase();
+                this.plugboard.put(pair.charAt(0), pair.charAt(1));
+            }
+            for (char character = 65; character <= 90; character++) {
+                this.plugboard.put(character, character);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    HashMap<Character, Character> getPlugboard() {
+        return this.plugboard;
     }
 
     private HashMap<Character, Character> encryptionTable(String rotorWiring) {
@@ -67,7 +100,7 @@ class Enigma {
         return this.rotors.get(i);
     }
     
-    LinkedList<String> getRotors() {
+    ArrayList<String> getRotors() {
         return this.rotors;
     }
 

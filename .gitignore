@@ -4,3 +4,6 @@
 
 # ignore .vscode folder
 \.vscode
+
+# ignore key text file
+*.txt
