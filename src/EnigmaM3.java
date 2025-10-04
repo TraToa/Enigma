@@ -1,8 +1,20 @@
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
+
+/**
+ * A specialized subclass inherited from the Enigma class of the Enigma cipher machine's model M3,
+ * used exclusively by the Kriegsmarine of Nazi Germany along with the M1, M2 and the later-impoved M4.
+ */
 
 class EnigmaM3 extends Enigma {
+    /**
+     * The exact number of rotors used in the model.
+     */
+    private static final int rotorNumber = 3;
+
+    /**
+     * The specific table mapping all the eight rotors used in the model to their corresponding wiring.
+     */
     private static final HashMap<String, String> rotorWiringTable = new HashMap<>(Map.of(
         "I", "EKMFLGDQVZNTOWYHXUSPAIBRCJ",
         "II", "AJDKSIRUXBLHWTMCQGZNPYFVOE",
@@ -14,20 +26,20 @@ class EnigmaM3 extends Enigma {
         "VIII", "FKQHTLXOCBJSPDZRAMEWNIUYGV"
     ));
 
+    /**
+     * The specific table mapping all the two reflectors, which are the UKW-B and UKW-C,
+     * used in the model to their exact wiring.
+     */
     private static final HashMap<String, String> reflectorWiringTable = new HashMap<>(Map.of(
         "UKW-B", "YRUHQSLDPXNGOKMIEBFZCWVJAT",
         "UKW-C", "FVPJIAOYEDRZXWGCTKUQSBNMHL"
     ));
 
+    /**
+     * The constructor calls the superconstructor, assigns the attributes
+     * of the superclass with those of this model subclass.
+     */
     EnigmaM3() {
-        super(3, rotorWiringTable, reflectorWiringTable);
-    }
-
-    @Override
-    void setRingSettings(Scanner scn) {
-        for (int i = 0; i < super.getRotorNumber(); i++) {
-            int ringInput = scn.nextLine().toUpperCase().charAt(0) - 64;
-            super.getRingSettings().add(ringInput);
-        }
+        super(rotorNumber, rotorWiringTable, reflectorWiringTable);
     }
 }
