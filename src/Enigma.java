@@ -1,5 +1,8 @@
-import java.util.HashMap;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
+
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -7,7 +10,6 @@ import java.util.Scanner;
 /**
  * An abstract representation of the logic inside the infamous cipher machine.
  */
-
 class Enigma {
 
     /**
@@ -200,32 +202,65 @@ class Enigma {
     }
 
     /**
-     * A method taking inputs of the rotors, adding them to {@code this.rotors} and
-     * their corresponding wiring to {@code this.encryptionTables}, respectively.
+     * A method extracting a line from the key {@code file} used to configure the machine.
      * 
-     * @param   scn
-     *          A {@code Scanner} object responsible for rotor inputting.
+     * @param   file
+     *          A {@code File} object used as the key for the cipher machine.
+     *
+     * @param   line
+     *          The number of the line which is to be read.
+     * 
+     * @throws  IOException
      */
-    void setRotors(Scanner scn) {
-        for (int i = 0; i < this.rotorNumber; i++) {
-            String rotorInput = scn.next().toUpperCase();
-            this.rotors.add(rotorInput);
-            this.encryptionTables.addLast(this.encryptionTable(this.getRotorWiring(rotorInput)));
-        }
+    private String getKeyLine(File file, int line) throws IOException {
+        String lineSequence = Files.lines(file.toPath())
+                                        .skip(line - 1)
+                                        .findFirst()
+                                        .orElse("");
+        return lineSequence;
     }
 
     /**
-     * A method taking inputs of the ring setting of each rotor
-     * and adding them to {@code this.ringSettings}.
+     * A method reading the rotors from a file at the exact line and
+     * call {@code this.setRotors()} method to handle the rest.
      * 
-     * @param   scn
-     *          A {@code Scanner} object responsible for setting inputting.
+     * @param   file
+     *          A {@code File} object containing the key to be read from.
+     * 
+     * @throws IOException
      */
-    void setRingSettings(Scanner scn) {
+    void setRotors(ExtendedInputStream input) throws IOException {
+        if (input.hasFile()) {
+            input.setString(this.getKeyLine(input.getFile(), 1));
+        }
+        Scanner rotorScn = new Scanner(input);
         for (int i = 0; i < this.rotorNumber; i++) {
-            int ringInput = scn.nextInt();
+            String rotorInput = rotorScn.next().toUpperCase();
+            this.rotors.add(rotorInput);
+            this.encryptionTables.addLast(this.encryptionTable(this.getRotorWiring(rotorInput)));
+        }
+        rotorScn.close();
+    }
+
+    /**
+     * A method reading the ring settings from a file at the exact line and
+     * call {@code this.setRingSettings()} to do the rest.
+     * 
+     * @param   file
+     *          A {@code File} object containing the key to be read from.
+     * 
+     * @throws IOException
+     */
+    void setRingSettings(ExtendedInputStream input) throws IOException {
+        if (input.hasFile()) {
+            input.setString(this.getKeyLine(input.getFile(), 2));
+        }
+        Scanner ringSettingsScn = new Scanner(input);
+        for (int i = 0; i < this.rotorNumber; i++) {
+            int ringInput = ringSettingsScn.nextInt();
             this.ringSettings.add(ringInput);
         }
+        ringSettingsScn.close();
     }
 
     /**
@@ -260,10 +295,12 @@ class Enigma {
      * @param   file
      *          A {@code File} object containing message to be read.
      */
-    void setPlugboard(File file) {
-        try (Scanner scn = new Scanner(file)) {
-            while (scn.hasNext()) {
-                String pair = scn.next().toUpperCase();
+    void setPlugboard(ExtendedInputStream input) throws IOException {
+        if (input.hasFile()) {
+            input.setString(this.getKeyLine(input.getFile(), 3));
+            Scanner plugboardScn = new Scanner(input);
+            while (plugboardScn.hasNext()) {
+                String pair = plugboardScn.next().toUpperCase();
                 this.plugboard.put(pair.charAt(0), pair.charAt(1));
                 this.plugboard.put(pair.charAt(1), pair.charAt(0));
             }
@@ -272,22 +309,40 @@ class Enigma {
                     this.plugboard.put(character, character);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            plugboardScn.close();
+        } else {
+            Scanner scn = new Scanner(System.in);
+            for (char pair1 = 65; pair1 <= 90; pair1++) {
+                if (!this.plugboard.containsKey(pair1)) {
+                    System.out.print(pair1);
+                    char pair2 = scn.next().toUpperCase().charAt(0);
+                    this.plugboard.put(pair1, pair2);
+                    if (pair1 != pair2) {
+                        this.plugboard.put(pair2, pair1);
+                    }
+                }
+            }
+            scn.close();
         }
     }
 
     /**
-     * A method taking input of the reflector, adding its corresponding wiring to
-     * the first of {@code this.encryptionTables} along with those of the rotors.
+     * A method taking preprinted for a key {@code file} and call {@code this.setReflector()}.
      * 
-     * @param   scn
-     *          A {@code Scanner} object responsible for rotor inputting.
+     * @param   file
+     *          A {@code File} object containing the key to be read from.
+     * 
+     * @throws IOException
      */
-    void setReflector(Scanner scn) {
-        String reflectorInput = scn.next().toUpperCase();
+    void setReflector(ExtendedInputStream input) throws IOException {
+        if (input.hasFile()) {
+            input.setString(this.getKeyLine(input.getFile(), 4));
+        }
+        Scanner reflectorScn = new Scanner(input);
+        String reflectorInput = reflectorScn.next().toUpperCase();
         String wiring = this.getReflectorWiring(reflectorInput);
         this.encryptionTables.addFirst(this.encryptionTable(wiring));
+        reflectorScn.close();
     }
 
     String getRotor(int i) {

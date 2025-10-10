@@ -7,3 +7,6 @@
 
 # ignore key text file
 *.txt
+
+# ignore testing class
+Test.java
