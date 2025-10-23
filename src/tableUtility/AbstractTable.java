@@ -149,7 +149,7 @@ abstract class AbstractTable<D,W,S> implements Table<D,W,S> {
         return ss;
     }
 
-    abstract Set<Entry<D,W,S>> entrySet();
+    public abstract Set<Entry<D,W,S>> entrySet();
 
     final class DesignationIterator implements Iterator<D> {
         private final Iterator<Entry<D,W,S>> i = entrySet().iterator();

@@ -1,6 +1,9 @@
 import java.util.HashMap;
 import java.util.Map;
 
+import tableUtility.HashTable;
+import tableUtility.Table;
+
 /**
  * A specialized subclass inherited from the Enigma class of the Enigma cipher machine's model M3,
  * used exclusively by the Kriegsmarine of Nazi Germany along with the M1, M2 and the later-impoved M4.
@@ -15,7 +18,11 @@ class EnigmaM3 extends Enigma {
     /**
      * The specific table mapping all the eight rotors used in the model to their corresponding wiring.
      */
-    private static final HashMap<String, String> rotorWiringTable = new HashMap<>(Map.of(
+    private static final HashTable<String, String, String> rotorWiringTable = new HashTable<>(Table.ofEntries(
+        Table.entry("I", "EKMFLGDQVZNTOWYHXUSPAIBRCJ", "R")
+    ));
+
+    /* Map.of(
         "I", "EKMFLGDQVZNTOWYHXUSPAIBRCJ",
         "II", "AJDKSIRUXBLHWTMCQGZNPYFVOE",
         "III", "BDFHJLCPRTXVZNYEIWGAKMUSQO",
@@ -24,7 +31,7 @@ class EnigmaM3 extends Enigma {
         "VI", "JPGVOUMFYQBENHZRDKASXLICTW",
         "VII", "NZJHGRCXMYSWBOUFAIVLPEKQDT",
         "VIII", "FKQHTLXOCBJSPDZRAMEWNIUYGV"
-    ));
+    ) */
 
     /**
      * The specific table mapping all the two reflectors, which are the UKW-B and UKW-C,

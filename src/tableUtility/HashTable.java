@@ -1,22 +1,15 @@
 package tableUtility;
-import java.beans.Transient;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.AbstractSet;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
-import javax.swing.tree.TreeNode;
-
-import tableUtility.Table.Entry;
-
-class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Table<D,W,S>, Cloneable, Serializable {
+public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable, Serializable {
     private static final int DEFAULT_INITIAL_CAPACITY = 1 << 4;
     private static final int MAXIMUM_CAPACITY = 1 << 30;
     private static final float DEFAULT_LOAD_FACTOR = 0.75F;
@@ -104,11 +97,11 @@ class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Table<D,W,S>, Clo
     private int threshold;
     private final float loadFactor;
 
-    HashTable() {
+    public HashTable() {
         this.loadFactor = DEFAULT_LOAD_FACTOR;
     }
 
-    HashTable(Table<? extends D, ? extends W, ? extends S> t) {
+    public HashTable(Table<? extends D, ? extends W, ? extends S> t) {
         this.loadFactor = DEFAULT_LOAD_FACTOR;
         putTableEntries(t, false);
     }
@@ -144,6 +137,40 @@ class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Table<D,W,S>, Clo
         return size == 0;
     }
 
+    public W getWiring(Object designation) {
+        Node<D,W,S> entry;
+        return (entry = getNode(designation)) == null ? null : entry.wiring;
+    }
+
+    private final Node<D,W,S> getNode(Object designation) {
+        Node<D,W,S>[] table;
+        Node<D,W,S> first;
+        Node<D,W,S> entry;
+        int size;
+        int hash;
+        D d = null;
+        if ((table = this.table) != null && (size = table.length) > 0 && (first = table[(size - 1) & (hash = hash(designation))]) != null) {
+            if (first.hash == hash && ((d = first.designation) == designation) || (designation != null && designation.equals(d))) {
+                return first;
+            }
+            if ((entry = first.next) != null) {
+                if (first instanceof TreeNode) {
+
+                }
+                while ((entry = entry.next) != null) {
+                    if (entry.hash == hash && ((d = entry.designation) == designation || (designation != null && designation.equals(d)))) {
+                        return entry;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean containsDesignation(Object desination) {
+        return getNode(desination) != null;
+    }
+
     private final W putVal(int hash, D desination, W wiring, S stepping, boolean onlyIfAbsent, boolean evict) {
         Node<D,W,S>[] table;
         Node<D,W,S> p;
@@ -163,13 +190,32 @@ class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Table<D,W,S>, Clo
                     if ((entry = p.next) == null) {
                         p.next = newNode(hash, desination, wiring, stepping, null);
                         if (binCount >= TREEIFY_THRESHOLD - 1) {
-
+                            treeifyBin(table, hash);
                         }
                         break;
                     }
+                    if (entry.hash == hash && ((d = entry.designation) == desination || (desination != null && desination.equals(d)))) {
+                        break;
+                    }
+                    p = entry;
                 }
             }
+            if (entry != null) {
+                W oldWiring = entry.wiring;
+                if (!onlyIfAbsent || oldWiring == null) {
+                    entry.wiring = wiring;
+                    entry.stepping = stepping;
+                }
+                afterNodeAccess(entry);
+                return oldWiring;
+            }
         }
+        ++modCount;
+        if (++size > threshold) {
+            resize();
+        }
+        afterNodeInsertion(evict);
+        return null;
     }
 
     private final Node<D,W,S>[] resize() {
@@ -195,7 +241,7 @@ class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Table<D,W,S>, Clo
             newThreshold = (newCapacity < MAXIMUM_CAPACITY && ft < (float) MAXIMUM_CAPACITY ? (int) ft : Integer.MAX_VALUE);
         }
         this.threshold = newThreshold;
-        @SuppressWarnings({"rawtypes","unchecked"})
+        @SuppressWarnings({"unchecked"})
         Node<D,W,S>[] newTable = (Node<D,W,S>[]) new Node[newCapacity];
         this.table = newTable;
         if (oldTable != null) {
@@ -260,12 +306,12 @@ class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Table<D,W,S>, Clo
                 tail = p;
             }
             if ((table[index] = head) != null) {
-                head.
+                head.treeify(table);
             }
         }
     }
 
-    Set<Table.Entry<D,W,S>> entryset() {
+    public Set<Table.Entry<D,W,S>> entrySet() {
         Set<Table.Entry<D,W,S>> es;
         return (es = entrySet) == null ? (entrySet = new EntrySet()) : es;
     }
@@ -334,6 +380,10 @@ class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Table<D,W,S>, Clo
         return new TreeNode<>(p.hash, p.designation, p.wiring, p.stepping, next);
     }
 
+    private void afterNodeAccess(Node<D,W,S> p) { }
+    private void afterNodeInsertion(boolean evict) { }
+    private void afterNodeRemoval(Node<D,W,S> p) { }
+
     private static final class TreeNode<D,W,S> extends LinkedHashTable.Entry<D,W,S> {
         TreeNode<D,W,S> parent;
         TreeNode<D,W,S> left;
@@ -345,15 +395,6 @@ class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Table<D,W,S>, Clo
             super(hash, designation, Wiring, stepping, next);
         }
 
-        final TreeNode<D,W,S> root() {
-            for (TreeNode<D,W,S> r = this, p ;;) {
-                if ((p = r.parent) == null) {
-                    return r;
-                }
-                r = p;
-            }
-        }
-
         static int tieBreakOrder(Object a, Object b) {
             int d;
             if (a == null || b == null ||
@@ -363,7 +404,7 @@ class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Table<D,W,S>, Clo
             return d;
         }
 
-        final void treeify(Node<D,W,S>[] tab) {
+        final void treeify(Node<D,W,S>[] table) {
             TreeNode<D,W,S> root = null;
             for (TreeNode<D,W,S> x = this, next; x != null; x = next) {
                 next = (TreeNode<D,W,S>)x.next;

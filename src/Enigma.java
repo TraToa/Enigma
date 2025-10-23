@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import tableUtility.HashTable;
+
 /**
  * An abstract representation of the logic inside the infamous cipher machine.
  */
@@ -61,7 +63,7 @@ class Enigma {
      * A table mapping rotors to their correct wirings according to their designations and the models
      * as their own names, wirings and the total number of rotors may differ depending on which model is being used.
      */
-    private HashMap<String, String> rotorWiringTable;
+    private HashTable<String, String, String> rotorWiringTable;
 
     /**
      * A table mapping reflectors to the correct wirings according the their and the machine's models designations
@@ -106,7 +108,7 @@ class Enigma {
      * @param   reflectorWiringTable
      *          The list mapping a reflector to its corresponding wiring.
      */
-    Enigma(int rotorNumber, HashMap<String, String> rotorWiringTable, HashMap<String, String>reflectorWiringTable) {
+    Enigma(int rotorNumber, HashTable<String, String, String> rotorWiringTable, HashMap<String, String>reflectorWiringTable) {
         this.setRotorNumber(rotorNumber);
         this.setRotorWiringTable(rotorWiringTable);
         this.setReflectorWiringTable(reflectorWiringTable);
@@ -127,7 +129,7 @@ class Enigma {
      * 
      * @param   rotorWiringTable
      */
-    private void setRotorWiringTable(HashMap<String, String> rotorWiringTable) {
+    private void setRotorWiringTable(HashTable<String, String, String> rotorWiringTable) {
         this.rotorWiringTable = rotorWiringTable;
     }
 
@@ -151,11 +153,7 @@ class Enigma {
      *          a null string if otherwise.
      */
     private String getRotorWiring(String rotor) {
-        if (this.rotorWiringTable.containsKey(rotor)) {
-            return this.rotorWiringTable.get(rotor);
-        } else {
-            return null;
-        }
+        return this.rotorWiringTable.containsDesignation(rotor) ? this.rotorWiringTable.getWiring(rotor) : null;
     }
 
     /**

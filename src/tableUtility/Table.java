@@ -2,7 +2,7 @@ package tableUtility;
 import java.util.Collection;
 import java.util.Set;
 
-interface Table<D,W,S> {
+public interface Table<D,W,S> {
     int size();
     boolean isEmpty();
     boolean containsDesignation(Object designation);
@@ -11,6 +11,7 @@ interface Table<D,W,S> {
     Set<D> designationSet();
     Collection<W> wiringSet();
     Collection<S> steppingSet();
+    Set<Table.Entry<D,W,S>> entrySet();
 
     interface Entry<D,W,S> {
         D getDesignation();
@@ -36,5 +37,9 @@ interface Table<D,W,S> {
             }
             return new ImmuTable.TableN<>(objects);
         }
+    }
+
+    static <D,W,S> Entry<D,W,S> entry(D designation, W wiring, S stepping) {
+        return new Holder<>(designation, wiring, stepping);
     }
 }
