@@ -33,7 +33,7 @@ public interface Table<D,W,S> {
             for (Entry<? extends D, ? extends W, ? extends S> entry : entries) {
                 objects[a++] = entry.getDesignation();
                 objects[a++] = entry.getWiring();
-                objects[a++] = entry.getWiring();
+                objects[a++] = entry.getStepping();
             }
             return new ImmuTable.TableN<>(objects);
         }

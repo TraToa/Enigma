@@ -31,11 +31,11 @@ class ImmuTable {
             if (input.length % 3 != 0) {
                 throw new InternalError("Invalid length");
             }
-            size = input.length * 3;
+            size = input.length;
 
             int len = size;
             table = new Object[len];
-            for (int i = 0; i < input.length; i++) {
+            for (int i = 0; i < input.length; i += 3) {
                 @SuppressWarnings("unchecked")
                     D designation = Objects.requireNonNull((D) input[i]);
                 @SuppressWarnings("unchecked")

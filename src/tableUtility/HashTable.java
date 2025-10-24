@@ -14,7 +14,6 @@ public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable,
     private static final int MAXIMUM_CAPACITY = 1 << 30;
     private static final float DEFAULT_LOAD_FACTOR = 0.75F;
     private static final int TREEIFY_THRESHOLD = 8;
-    private static final int UNTREEIFY_THRESHOLD = 6;
     private static final int MIN_TREEIFY_CAPACITY = 64;
 
     static class Node<D,W,S> implements Table.Entry<D,W,S> {
@@ -149,7 +148,7 @@ public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable,
         int size;
         int hash;
         D d = null;
-        if ((table = this.table) != null && (size = table.length) > 0 && (first = table[(size - 1) & (hash = hash(designation))]) != null) {
+        if ((table = this.table) != null && (size = table.length) > 0 && (first = table[ Math.floorMod(hash = hash(designation), size)]) != null) {
             if (first.hash == hash && ((d = first.designation) == designation) || (designation != null && designation.equals(d))) {
                 return first;
             }
@@ -178,7 +177,7 @@ public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable,
         if ((table = this.table) == null || (size = table.length) == 0) {
             size = (table = resize()).length;
         }
-        if ((p = table[index = (size - 1) & hash]) == null) {
+        if ((p = table[index = Math.floorMod(hash, size)]) == null) {
             table[index] = newNode(hash, desination, wiring, stepping, null);
         } else {
             Node<D,W,S> entry;
@@ -250,14 +249,14 @@ public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable,
                 if ((e = oldTable[j]) != null) {
                     oldTable[j] = null;
                     if (e.next == null) {
-                        newTable[e.hash & (newCapacity - 1)] = e;
+                        newTable[Math.floorMod(e.hash, newCapacity)] = e;
                     } else {
                         Node<D,W,S> loHead = null, loTail = null;
                         Node<D,W,S> hiHead = null, hiTail = null;
                         Node<D,W,S> next;
                         do {
                             next = e.next;
-                            if ((e.hash & oldCapacity) == 0) {
+                            if ((Math.floorMod(e.hash, oldCapacity + 1)) == 0) {
                                 if (loTail == null)
                                     loHead = e;
                                 else
@@ -288,11 +287,11 @@ public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable,
     }
 
     private final void treeifyBin(Node<D,W,S>[] table, int hash) {
-        int n, index;
+        int size, index;
         Node<D,W,S> entry;
-        if (table == null || (n = table.length) < MIN_TREEIFY_CAPACITY) {
+        if (table == null || (size = table.length) < MIN_TREEIFY_CAPACITY) {
             resize();
-        } else if ((entry = table[index = (n - 1) & hash]) != null) {
+        } else if ((entry = table[index = Math.floorMod(hash, size)]) != null) {
             TreeNode<D,W,S> head = null;
             TreeNode<D,W,S> tail = null;
             while ((entry = entry.next) != null) {
@@ -382,7 +381,7 @@ public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable,
 
     private void afterNodeAccess(Node<D,W,S> p) { }
     private void afterNodeInsertion(boolean evict) { }
-    private void afterNodeRemoval(Node<D,W,S> p) { }
+    // private void afterNodeRemoval(Node<D,W,S> p) { }
 
     private static final class TreeNode<D,W,S> extends LinkedHashTable.Entry<D,W,S> {
         TreeNode<D,W,S> parent;
@@ -393,6 +392,28 @@ public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable,
 
         TreeNode(int hash, D designation, W Wiring, S stepping, Node<D,W,S> next)  {
             super(hash, designation, Wiring, stepping, next);
+        }
+
+        static <D,W,S> void moveRootToFront(Node<D,W,S>[] table, TreeNode<D,W,S> root) {
+            int n;
+            if (root != null && table != null && (n = table.length) > 0) {
+                int index = (n - 1) & root.hash;
+                TreeNode<D,W,S> first = (TreeNode<D,W,S>)table[index];
+                if (root != first) {
+                    Node<D,W,S> rn;
+                    table[index] = root;
+                    TreeNode<D,W,S> rp = root.previous;
+                    if ((rn = root.next) != null)
+                        ((TreeNode<D,W,S>)rn).previous = rp;
+                    if (rp != null)
+                        rp.next = rn;
+                    if (first != null)
+                        first.previous = root;
+                    root.next = first;
+                    root.previous = null;
+                }
+                assert checkInvariants(root);
+            }
         }
 
         static int tieBreakOrder(Object a, Object b) {
@@ -441,6 +462,7 @@ public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable,
                     }
                 }
             }
+            moveRootToFront(table, root);
         }
 
         static <D,W,S> TreeNode<D,W,S> rotateLeft(TreeNode<D,W,S> root, TreeNode<D,W,S> p) {
@@ -529,6 +551,30 @@ public class HashTable<D,W,S> extends AbstractTable<D,W,S> implements Cloneable,
                     }
                 }
             }
+        }
+
+        static <D,W,S> boolean checkInvariants(TreeNode<D,W,S> table) {
+            TreeNode<D,W,S> tableParent = table.parent;
+            TreeNode<D,W,S> tableLeft = table.left;
+            TreeNode<D,W,S> tableRight = table.right,
+                tablePrevious = table.previous, tn = (TreeNode<D,W,S>)tableLeft.next;
+            if (tablePrevious != null && tablePrevious.next != table)
+                return false;
+            if (tn != null && tn.previous != table)
+                return false;
+            if (tableParent != null && table != tableParent.left && table != tableParent.right)
+                return false;
+            if (tableLeft != null && (tableLeft.parent != table || tableLeft.hash > table.hash))
+                return false;
+            if (tableRight != null && (tableRight.parent != table || tableRight.hash < table.hash))
+                return false;
+            if (table.red && tableLeft != null && tableLeft.red && tableRight != null && tableRight.red)
+                return false;
+            if (tableLeft != null && !checkInvariants(tableLeft))
+                return false;
+            if (tableRight != null && !checkInvariants(tableRight))
+                return false;
+            return true;
         }
     }
 }

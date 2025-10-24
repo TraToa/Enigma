@@ -19,19 +19,15 @@ class EnigmaM3 extends Enigma {
      * The specific table mapping all the eight rotors used in the model to their corresponding wiring.
      */
     private static final HashTable<String, String, String> rotorWiringTable = new HashTable<>(Table.ofEntries(
-        Table.entry("I", "EKMFLGDQVZNTOWYHXUSPAIBRCJ", "R")
+        Table.entry("I", "EKMFLGDQVZNTOWYHXUSPAIBRCJ", "R"),
+        Table.entry("II", "AJDKSIRUXBLHWTMCQGZNPYFVOE", "F"),
+        Table.entry("III", "BDFHJLCPRTXVZNYEIWGAKMUSQO", "W"),
+        Table.entry("IV", "ESOVPZJAYQUIRHXLNFTGKDCMWB", "K"),
+        Table.entry("V", "VZBRGITYUPSPNHLXAWMJQOFECK", "A"),
+        Table.entry("VI", "JPGVOUMFYQBENHZRDKASXLICTW", "AN"),
+        Table.entry("VII", "NZJHGRCXMYSWBOUFAIVLPEKQDT", "AN"),
+        Table.entry("VIII", "FKQHTLXOCBJSPDZRAMEWNIUYGV", "AN")
     ));
-
-    /* Map.of(
-        "I", "EKMFLGDQVZNTOWYHXUSPAIBRCJ",
-        "II", "AJDKSIRUXBLHWTMCQGZNPYFVOE",
-        "III", "BDFHJLCPRTXVZNYEIWGAKMUSQO",
-        "IV", "ESOVPZJAYQUIRHXLNFTGKDCMWB",
-        "V", "VZBRGITYUPSPNHLXAWMJQOFECK",
-        "VI", "JPGVOUMFYQBENHZRDKASXLICTW",
-        "VII", "NZJHGRCXMYSWBOUFAIVLPEKQDT",
-        "VIII", "FKQHTLXOCBJSPDZRAMEWNIUYGV"
-    ) */
 
     /**
      * The specific table mapping all the two reflectors, which are the UKW-B and UKW-C,
